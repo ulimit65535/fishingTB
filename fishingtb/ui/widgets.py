@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from textual.binding import Binding
-from textual.containers import Horizontal
+from textual.containers import ItemGrid
 from textual.widgets import Input, Static
 
 
@@ -36,18 +36,23 @@ class CamouflageInput(Input):
     ]
 
 
-class ToolBar(Horizontal):
-    """Clickable text-link action bar."""
+class ToolBar(ItemGrid):
+    """Text actions that wrap into visible, clickable rows in narrow panes."""
+
+    def __init__(self, *children, **kwargs):
+        kwargs.setdefault("min_column_width", 14)
+        super().__init__(*children, **kwargs)
 
     DEFAULT_CSS = """
     ToolBar {
-        height: 1;
-        align: left middle;
+        height: auto;
+        grid-rows: 1;
+        grid-gutter: 0 1;
         padding: 0 1;
         background: transparent;
     }
     ToolBar Button {
-        margin-right: 1;
+        margin: 0;
         min-width: 0;
         height: 1;
     }

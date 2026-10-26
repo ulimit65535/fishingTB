@@ -5,7 +5,7 @@ from __future__ import annotations
 from textual import on, work
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical
+from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Label, ListItem, ListView, Static
 
@@ -38,12 +38,9 @@ class ForumScreen(Screen):
         padding: 0 1;
     }
     #tab-bar {
-        height: 1;
+        height: auto;
         padding: 0 1;
         margin-bottom: 1;
-    }
-    #tab-bar Button {
-        margin-right: 1;
     }
     #tab-bar Button.-active {
         color: $text;
@@ -83,7 +80,7 @@ class ForumScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Label("Home", id="home-header", markup=False)
-        with Horizontal(id="tab-bar"):
+        with ToolBar(id="tab-bar"):
             yield Button("关注动态", id="tab-feed")
             yield Button("关注的吧", id="tab-forums")
             yield Button("搜索吧", id="tab-search")

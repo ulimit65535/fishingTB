@@ -5,7 +5,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from PIL import Image
-from textual.widgets import Static
+from rich.cells import cell_len
+from textual.widgets import Button, Static
 from fishingtb import config
 from fishingtb.models import ThreadItem, PostItem, CommentItem
 from fishingtb.ui.app import FishingApp
@@ -13,6 +14,25 @@ from fishingtb.ui.screens.forum import ForumScreen
 from fishingtb.ui.screens.thread_list import ThreadListScreen
 from fishingtb.ui.screens.thread_detail import ThreadDetailScreen
 from fishingtb.ui.screens.image_preview import ImagePreviewScreen
+from fishingtb.ui.widgets import ToolBar
+
+
+def assert_toolbar_hitboxes(app):
+    for toolbar in app.screen.query(ToolBar):
+        for button in toolbar.query(Button):
+            assert app.screen.region.contains_region(button.region), button.id
+            assert toolbar.content_region.contains_region(button.region), button.id
+            assert button.content_size.width >= cell_len(button.label.plain), button.id
+            x, y = button.region.center
+            assert app.get_widget_at(x, y)[0] is button, button.id
+
+
+async def click_action(app, pilot, selector):
+    button = app.screen.query_one(selector, Button)
+    x, y = button.region.center
+    assert app.get_widget_at(x, y)[0] is button, selector
+    assert await pilot.click(offset=(x, y)), selector
+    await pilot.pause()
 
 
 async def main():
@@ -44,25 +64,44 @@ async def main():
             await pilot.press('enter')
             await pilot.pause()
             assert isinstance(app.screen, ThreadListScreen)
-            await pilot.click('#btn-next')
-            await pilot.pause()
+            # Match a narrow side terminal, then resize without restarting.
+            for width, height in ((24, 24), (120, 40), (38, 46)):
+                await pilot.resize_terminal(width, height)
+                await pilot.pause()
+                assert_toolbar_hitboxes(app)
+            await click_action(app, pilot, '#btn-next')
             assert app.screen.page == 2
-            await pilot.click('#btn-sort')
-            await pilot.pause()
+            await click_action(app, pilot, '#btn-prev')
             assert app.screen.page == 1
-            await pilot.click('#thread-list ListItem')
-            await pilot.pause()
+            await click_action(app, pilot, '#btn-refresh')
+            old_sort = app.screen.sort
+            await click_action(app, pilot, '#btn-sort')
+            assert app.screen.page == 1
+            assert app.screen.sort != old_sort
+            app.screen.query_one('#thread-list').index = 0
+            await click_action(app, pilot, '#btn-open')
             assert isinstance(app.screen, ThreadDetailScreen), type(app.screen)
             assert len(app.screen.posts) == 1
-            await pilot.click('#btn-all-imgs')
-            await pilot.pause()
+            assert_toolbar_hitboxes(app)
+            await click_action(app, pilot, '#btn-next')
+            assert app.screen.page == 2
+            await click_action(app, pilot, '#btn-prev')
+            assert app.screen.page == 1
+            await click_action(app, pilot, '#btn-refresh')
+            await click_action(app, pilot, '#btn-all-imgs')
             assert isinstance(app.screen, ImagePreviewScreen)
             await pilot.pause(0.3)
+            assert_toolbar_hitboxes(app)
             assert '已加载' in str(app.screen.query_one('#status', Static).content)
-            await pilot.press('escape')
-            await pilot.pause()
+            await click_action(app, pilot, '#btn-close')
             assert isinstance(app.screen, ThreadDetailScreen)
-    print('workflow ok: search q, forum paging/sort, posts/comments, image preview')
+            await click_action(app, pilot, '#btn-back')
+            assert isinstance(app.screen, ThreadListScreen)
+            await pilot.pause(0.3)
+            await click_action(app, pilot, '#btn-back')
+            assert isinstance(app.screen, ForumScreen)
+            assert_toolbar_hitboxes(app)
+    print('workflow ok: responsive toolbars at 24/38/120 columns, coordinate clicks, paging/sort/open/back, image preview')
 
 
 if __name__ == '__main__':

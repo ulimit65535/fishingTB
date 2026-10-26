@@ -112,6 +112,14 @@ class FishingApp(App[None]):
         color: $text;
         text-style: underline;
     }
+    ToolBar > Button {
+        width: 1fr;
+        margin: 0;
+    }
+    Button:ansi.-active {
+        border: none !important;
+        background: transparent !important;
+    }
     """
 
     BINDINGS = [
