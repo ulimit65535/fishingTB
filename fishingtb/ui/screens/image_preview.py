@@ -42,7 +42,7 @@ class ImagePreviewScreen(ModalScreen[None]):
         width: 96%;
         height: 92%;
         background: $surface;
-        border: tall $primary 30%;
+        border: tall ansi_bright_black;
         padding: 0 1;
     }
     #preview-title {

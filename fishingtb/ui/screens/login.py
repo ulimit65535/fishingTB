@@ -47,7 +47,7 @@ class LoginScreen(Screen):
     #login-box {
         width: 80;
         height: auto;
-        border: round $accent;
+        border: round ansi_bright_black;
         padding: 1 2;
         background: $surface;
     }

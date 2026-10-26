@@ -26,7 +26,7 @@ class SetupScreen(Screen):
     #setup-box {
         width: 72;
         height: auto;
-        border: round $accent;
+        border: round ansi_bright_black;
         padding: 1 2;
         background: $surface;
     }

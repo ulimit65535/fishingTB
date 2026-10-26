@@ -37,7 +37,7 @@ class ThreadDetailScreen(Screen):
         max-height: 3;
         text-style: bold;
         padding: 0 1;
-        border-bottom: tall $primary 20%;
+        border-bottom: tall ansi_bright_black;
     }
     #posts-scroll {
         height: 1fr;

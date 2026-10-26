@@ -46,7 +46,7 @@ class ForumScreen(Screen):
         margin-right: 1;
     }
     #tab-bar Button.-active {
-        color: $primary;
+        color: $text;
         text-style: underline;
         background: transparent;
     }
@@ -55,7 +55,7 @@ class ForumScreen(Screen):
     }
     #feed-list, #forum-list {
         height: 1fr;
-        border: tall $primary 20%;
+        border: none;
     }
     #search-pane {
         height: 1fr;
@@ -69,7 +69,7 @@ class ForumScreen(Screen):
     }
     #recent-list {
         height: 1fr;
-        border: tall $primary 20%;
+        border: none;
     }
     """
 

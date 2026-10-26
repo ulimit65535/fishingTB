@@ -24,6 +24,54 @@ class FishingApp(App[None]):
         background: $background;
     }
 
+    /* ANSI themes otherwise force bright blue scrollbars, even when idle. */
+    * {
+        scrollbar-size-vertical: 1;
+        scrollbar-background: $background;
+        scrollbar-background-hover: $background;
+        scrollbar-background-active: $background;
+        scrollbar-corner-color: $background;
+        scrollbar-color: ansi_bright_black;
+        scrollbar-color-hover: ansi_bright_black;
+        scrollbar-color-active: ansi_bright_black;
+        link-color: $text;
+        link-color-hover: $text;
+        link-background-hover: transparent;
+    }
+
+    /* Keep lists like plain terminal output, including focus and hover. */
+    ListView, ListView:focus {
+        background: transparent;
+        background-tint: transparent;
+    }
+    ListView > ListItem,
+    ListView > ListItem.-hovered,
+    ListView > ListItem.-highlight,
+    ListView:focus > ListItem.-highlight {
+        color: $text;
+        background: transparent;
+        text-style: none;
+    }
+    ListView > ListItem.-hovered {
+        text-style: underline;
+    }
+    ListView > ListItem.-highlight {
+        text-style: bold;
+    }
+    ListView:focus > ListItem.-highlight {
+        text-style: bold underline;
+    }
+    ListView > ListItem > Label {
+        width: 1fr;
+        height: 1;
+        text-wrap: nowrap;
+        text-overflow: ellipsis;
+    }
+    Input, Input:focus {
+        border: tall ansi_bright_black;
+        background-tint: transparent;
+    }
+
     /* Quiet text-link buttons — no filled chrome */
     Button {
         background: transparent;
@@ -38,30 +86,30 @@ class FishingApp(App[None]):
     Button:hover {
         background: transparent;
         border: none;
-        color: $primary;
+        color: $text;
         text-style: underline;
     }
     Button:focus {
         background: transparent;
         border: none;
-        color: $primary;
+        color: $text;
         text-style: underline;
     }
     Button.-active {
         background: transparent;
         border: none;
-        color: $primary;
+        color: $text;
         text-style: underline;
     }
     Button.primary,
     Button.-primary {
         background: transparent;
         border: none;
-        color: $primary;
+        color: $text;
     }
     Button.primary:hover,
     Button.-primary:hover {
-        color: $secondary;
+        color: $text;
         text-style: underline;
     }
     """

@@ -36,7 +36,7 @@ class ThreadListScreen(Screen):
     }
     #thread-list {
         height: 1fr;
-        border: round $primary;
+        border: none;
     }
     """
 
