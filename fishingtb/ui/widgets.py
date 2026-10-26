@@ -10,6 +10,10 @@ from textual.widgets import Input, Static
 class StatusBar(Static):
     """Bottom status / hint line."""
 
+    def __init__(self, *args, **kwargs):
+        kwargs["markup"] = False
+        super().__init__(*args, **kwargs)
+
     DEFAULT_CSS = """
     StatusBar {
         dock: bottom;

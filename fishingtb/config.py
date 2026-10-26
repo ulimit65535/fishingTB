@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import shutil
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +22,7 @@ DEFAULTS: dict[str, Any] = {
     "bduss": "",
     "stoken": "",
     "terminal_title": "npm run dev",
+    "theme": "ansi-light",
     "recent_forums": [],
     # auto | sixel | braille | halfblock  (auto → Sixel in Windows Terminal)
     "image_renderer": "auto",
@@ -68,6 +71,8 @@ def load_config() -> dict[str, Any]:
     data["stoken"] = str(data.get("stoken") or "").strip()
     data["terminal_title"] = str(data.get("terminal_title") or DEFAULTS["terminal_title"])
     recent = data.get("recent_forums") or []
+    if not isinstance(recent, list):
+        recent = []
     data["recent_forums"] = [str(x).strip() for x in recent if str(x).strip()]
     return data
 
@@ -78,8 +83,14 @@ def save_config(data: dict[str, Any]) -> None:
     merged.update(data)
     merged["bduss"] = str(merged.get("bduss") or "").strip()
     merged["stoken"] = str(merged.get("stoken") or "").strip()
-    with CONFIG_PATH.open("w", encoding="utf-8") as f:
-        yaml.safe_dump(merged, f, allow_unicode=True, sort_keys=False)
+    # A same-directory atomic replacement keeps credentials private even on first save.
+    fd, name = tempfile.mkstemp(prefix=".config-", dir=CONFIG_PATH.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            yaml.safe_dump(merged, f, allow_unicode=True, sort_keys=False)
+        os.replace(name, CONFIG_PATH)
+    finally:
+        Path(name).unlink(missing_ok=True)
 
 
 def has_bduss() -> bool:

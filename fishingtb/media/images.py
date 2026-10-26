@@ -6,11 +6,16 @@ import asyncio
 import hashlib
 import io
 import logging
+import warnings
 from collections import OrderedDict
 from pathlib import Path
 
 import aiohttp
 from PIL import Image as PILImage
+from urllib.parse import urljoin
+
+from fishingtb.media.urls import media_url
+from fishingtb.tls import verified_context
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +37,8 @@ INLINE_MAX_SIDE = PREVIEW_MAX_SIDE
 
 _FETCH_TIMEOUT = 12.0
 _MEMORY_LIMIT = 48
+MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024
+MAX_IMAGE_PIXELS = 24_000_000
 
 _session: aiohttp.ClientSession | None = None
 _download_sem = asyncio.Semaphore(3)
@@ -57,7 +64,7 @@ def clear_disk_cache() -> int:
 
 
 def _cache_path(url: str) -> Path:
-    h = hashlib.sha1(url.encode("utf-8", errors="ignore")).hexdigest()
+    h = hashlib.sha256(url.encode("utf-8", errors="ignore")).hexdigest()
     return CACHE_DIR / f"{h}.img"
 
 
@@ -77,7 +84,11 @@ def _mem_put(url: str, img: PILImage.Image) -> None:
 
 def _decode_and_resize(data: bytes, max_side: int) -> PILImage.Image:
     buf = io.BytesIO(data)
-    img = PILImage.open(buf)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", PILImage.DecompressionBombWarning)
+        img = PILImage.open(buf)
+    if img.width * img.height > MAX_IMAGE_PIXELS:
+        raise ValueError("图片像素过大")
     if max_side > 0 and img.format == "JPEG" and hasattr(img, "draft"):
         img.draft("RGB", (max_side, max_side))
     img = img.convert("RGB")
@@ -100,7 +111,7 @@ async def _get_session() -> aiohttp.ClientSession:
             "User-Agent": UA,
             "Referer": "https://tieba.baidu.com/",
         }
-        connector = aiohttp.TCPConnector(limit=6, ttl_dns_cache=300)
+        connector = aiohttp.TCPConnector(limit=6, ttl_dns_cache=300, ssl=verified_context())
         _session = aiohttp.ClientSession(
             timeout=timeout,
             headers=headers,
@@ -124,20 +135,39 @@ def _disk_cached(url: str) -> bool:
 
 
 async def _read_bytes(url: str, *, priority: bool = False) -> bytes:
+    url = media_url(url)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path = _cache_path(url)
     if _disk_cached(url):
+        if path.stat().st_size > MAX_DOWNLOAD_BYTES:
+            raise ValueError("图片文件过大")
         return await asyncio.to_thread(path.read_bytes)
 
     sem = _user_fetch_sem if priority else _download_sem
     async with sem:
         if _disk_cached(url):
+            if path.stat().st_size > MAX_DOWNLOAD_BYTES:
+                raise ValueError("图片文件过大")
             return await asyncio.to_thread(path.read_bytes)
         session = await _get_session()
-        async with session.get(url) as resp:
-            if resp.status >= 400:
-                raise RuntimeError(f"HTTP {resp.status} downloading image")
-            data = await resp.read()
+        current = url
+        for _ in range(4):
+            async with session.get(current, allow_redirects=False) as resp:
+                if resp.status in (301, 302, 303, 307, 308):
+                    current = media_url(urljoin(current, resp.headers.get("Location", "")))
+                    continue
+                resp.raise_for_status()
+                if resp.content_length and resp.content_length > MAX_DOWNLOAD_BYTES:
+                    raise ValueError("图片文件过大")
+                data = bytearray()
+                async for chunk in resp.content.iter_chunked(64 * 1024):
+                    data.extend(chunk)
+                    if len(data) > MAX_DOWNLOAD_BYTES:
+                        raise ValueError("图片文件过大")
+                data = bytes(data)
+                break
+        else:
+            raise ValueError("图片重定向次数过多")
         await asyncio.to_thread(path.write_bytes, data)
         return data
 

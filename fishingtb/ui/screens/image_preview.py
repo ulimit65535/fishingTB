@@ -12,6 +12,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
 from fishingtb.media.images import PREVIEW_MAX_SIDE, fetch_image, warm_image_bytes
+from fishingtb.media.urls import media_url
 from fishingtb.media.terminal_image import (
     create_image_widget,
     display_bounds,
@@ -68,6 +69,7 @@ class ImagePreviewScreen(ModalScreen[None]):
         title_prefix: str = "图片预览",
         hint: str | None = None,
         gallery: bool | None = None,
+        renderer: str | None = None,
     ) -> None:
         super().__init__()
         self.urls = [u for u in urls if u]
@@ -76,6 +78,7 @@ class ImagePreviewScreen(ModalScreen[None]):
         self.title_prefix = title_prefix
         self.hint_text = hint or "←/→ 切换 · Esc 关闭 · o 浏览器打开"
         self.gallery = gallery if gallery is not None else len(self.urls) > 1
+        self.renderer = renderer
 
     def compose(self) -> ComposeResult:
         with Vertical(id="preview-box"):
@@ -151,10 +154,11 @@ class ImagePreviewScreen(ModalScreen[None]):
                 max_width=mw,
                 max_height=mh,
                 mode="full",
+                renderer=self.renderer,
             )
             await host.remove_children()
             await host.mount(widget)
-            renderer = resolve_image_renderer()
+            renderer = self.renderer or resolve_image_renderer()
             tag = type(widget).__name__
             if renderer == "sixel" and tag == "Image":
                 tag = "Sixel"
@@ -192,7 +196,12 @@ class ImagePreviewScreen(ModalScreen[None]):
     def action_browser(self) -> None:
         if not self.urls:
             return
-        webbrowser.open(self.urls[self.index])
+        try:
+            url = media_url(self.urls[self.index])
+        except ValueError as exc:
+            self._set_status(str(exc))
+            return
+        webbrowser.open(url)
         self._set_status("已在浏览器打开当前图")
 
     @on(Button.Pressed, "#btn-prev")

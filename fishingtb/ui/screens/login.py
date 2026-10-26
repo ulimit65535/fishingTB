@@ -80,10 +80,10 @@ class LoginScreen(Screen):
             yield Label("登录 /login")
             yield Static(
                 "点「扫码登录」会在终端内弹窗显示二维码\n"
-                "可多次点击，每次新开一个码 · o 重新打开最近二维码",
+                "再次点击会替换上次登录 · o 重新打开最近二维码",
                 id="login-hint",
             )
-            yield Static("准备就绪。", id="login-status")
+            yield Static("准备就绪。", id="login-status", markup=False)
             with Vertical(id="login-actions"):
                 yield Button("扫码登录", variant="primary", id="start")
                 yield Button("显示二维码", id="show-qr")
@@ -120,6 +120,8 @@ class LoginScreen(Screen):
         self._update_leave_button()
 
     def on_qr_ready(self, event: QrReady) -> None:
+        if event.login_id != self._login_seq or self._cancelled:
+            return
         self._last_qr_url = event.img_url
         self.app.push_screen(
             ImagePreviewScreen(
@@ -127,6 +129,7 @@ class LoginScreen(Screen):
                 title_prefix=f"扫码登录 #{event.login_id}",
                 hint="百度 App 扫码并在手机确认 · Esc 关弹窗（后台仍等待）",
                 gallery=False,
+                renderer="halfblock",
             )
         )
         self._set_msg(f"#{event.login_id} 已在终端弹窗显示二维码，请扫码")
@@ -171,6 +174,7 @@ class LoginScreen(Screen):
                 title_prefix="扫码登录",
                 hint="百度 App 扫码 · Esc 关闭",
                 gallery=False,
+                renderer="halfblock",
             )
         )
 
@@ -194,7 +198,7 @@ class LoginScreen(Screen):
             self._set_msg(f"登出失败: {e}")
             self.app.notify(str(e), severity="error")
 
-    @work
+    @work(exclusive=True, group="qr-login")
     async def _run_login(self, login_id: int) -> None:
         async def progress(msg: str) -> None:
             self._set_msg(f"#{login_id} {msg}")
@@ -211,8 +215,7 @@ class LoginScreen(Screen):
             )
             cfg = load_config()
             cfg["bduss"] = tokens.bduss
-            if tokens.stoken:
-                cfg["stoken"] = tokens.stoken
+            cfg["stoken"] = tokens.stoken
             save_config(cfg)
 
             await self.app.session.start(tokens.bduss, tokens.stoken)

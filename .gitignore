@@ -1,5 +1,6 @@
 # Secrets — never commit
 config.yaml
+.config-*
 bduss.txt
 
 # Generated runtime data (image cache; cleared each start)

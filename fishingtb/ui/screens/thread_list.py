@@ -51,7 +51,7 @@ class ThreadListScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical():
-            yield Label("", id="list-header")
+            yield Label("", id="list-header", markup=False)
             yield ListView(id="thread-list")
             with ToolBar():
                 yield Button("返回", id="btn-back")

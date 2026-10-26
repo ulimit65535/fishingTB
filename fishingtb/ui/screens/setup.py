@@ -55,7 +55,7 @@ class SetupScreen(Screen):
         with Vertical(id="setup-box"):
             yield Label("Login")
             yield Static(
-                "Recommended: QR Login — opens browser, scan with 百度 App.\n"
+                "Recommended: QR Login — scan in terminal with 百度 App.\n"
                 "Or paste BDUSS / STOKEN from browser cookies (manual).",
                 id="setup-hint",
             )

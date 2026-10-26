@@ -2,7 +2,7 @@
 
 在终端里刷贴吧的 Textual TUI —— 键盘/鼠标都能用，窗口标题可伪装成 `npm run dev`，一键老板键切走。
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Textual](https://img.shields.io/badge/UI-Textual-41a4a9.svg)](https://textual.textualize.io/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -20,11 +20,32 @@
 
 ## 环境要求
 
-- **Python 3.10+**
+- **Python 3.11+**（本机验证：Python 3.14 / macOS arm64）
 - 推荐 **[Windows Terminal](https://github.com/microsoft/terminal)**（Sixel 彩色图预览体验最好）
 - 贴吧账号（扫码登录）
 
 ## 快速开始
+
+本机已配置 `.venv`，可双击 `start.command`，或在项目目录运行：
+
+```bash
+./.venv/bin/python main.py
+```
+
+进入登录页后点击「扫码登录」，用百度 App 扫描并确认。二维码使用黑白块渲染；扫码前建议放大终端窗口。
+
+本次检查、修复和验证范围见 [本地检查报告](docs/LOCAL_REVIEW.md)。
+`config.yaml` 包含账号登录凭证，以权限 `600` 保存在本地，未加密，请勿分享。
+当前项目为 `aiotieba==4.8.2` 增加了 HTTPS 与证书校验适配，升级该依赖时必须重新验证适配和安全测试。
+
+`requirements.lock` 锁定本机验证的 30 个依赖及 macOS arm64 / Python 3.14 wheel 的 SHA-256。
+同平台重新安装时使用：
+
+```bash
+python -m pip install --index-url https://pypi.org/simple --only-binary=:all: --require-hashes -r requirements.lock
+```
+
+其他系统使用下方 `requirements.txt` 安装流程，再运行测试；锁文件不保证跨平台可用。
 
 ```bash
 git clone https://github.com/andrewtarget/fishingTB.git
@@ -60,6 +81,7 @@ python main.py login
 |----|------|
 | `bduss` / `stoken` | 登录后自动写入 |
 | `terminal_title` | 终端标题，默认 `npm run dev` |
+| `theme` | 默认 `ansi-light`，使用终端本身的底色、文字色和 ANSI 调色板；深色终端可选 `ansi-dark` |
 | `recent_forums` | 最近访问的吧 |
 | `image_renderer` | `auto` \| `sixel` \| `braille` \| `halfblock` |
 
@@ -93,8 +115,12 @@ fishingTB/
 ## 开发
 
 ```bash
-python scripts/smoke_test.py
-python scripts/pilot_test.py
+python -m scripts.smoke_test
+python -m scripts.pilot_test
+python -m scripts.security_test
+python -m scripts.workflow_test
+# 联网公开数据测试，无需账号
+python -m scripts.api_smoke
 ```
 
 ## 截图

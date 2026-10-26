@@ -47,13 +47,13 @@ class BossScreen(ModalScreen[None]):
 
     CSS = """
     BossScreen {
-        background: #0c0c0c;
+        background: $background;
     }
     #boss-log {
         height: 1fr;
         width: 1fr;
-        background: #0c0c0c;
-        color: #cccccc;
+        background: $background;
+        color: $text;
         border: none;
         padding: 1 2;
     }

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import aiotieba
+from fishingtb.transport import VerifiedClient
 
 from fishingtb.config import load_config
 
@@ -38,7 +39,7 @@ class TiebaSession:
         stoken = (stoken if stoken is not None else cfg.get("stoken", "")).strip()
         if not bduss:
             raise ValueError("BDUSS is empty. Configure it in Setup.")
-        self._client = aiotieba.Client(BDUSS=bduss, STOKEN=stoken or "")
+        self._client = VerifiedClient(BDUSS=bduss, STOKEN=stoken or "", try_ws=False)
         await self._client.__aenter__()
 
     async def close(self) -> None:

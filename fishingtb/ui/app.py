@@ -38,36 +38,36 @@ class FishingApp(App[None]):
     Button:hover {
         background: transparent;
         border: none;
-        color: #4ea1ff;
+        color: $primary;
         text-style: underline;
     }
     Button:focus {
         background: transparent;
         border: none;
-        color: #4ea1ff;
+        color: $primary;
         text-style: underline;
     }
     Button.-active {
         background: transparent;
         border: none;
-        color: #4ea1ff;
+        color: $primary;
         text-style: underline;
     }
     Button.primary,
     Button.-primary {
         background: transparent;
         border: none;
-        color: #4ea1ff;
+        color: $primary;
     }
     Button.primary:hover,
     Button.-primary:hover {
-        color: #7cbcff;
+        color: $secondary;
         text-style: underline;
     }
     """
 
     BINDINGS = [
-        Binding("q", "quit", "Quit", show=False, priority=True),
+        Binding("q", "quit", "Quit", show=False),
     ]
 
     def __init__(self) -> None:
@@ -76,6 +76,7 @@ class FishingApp(App[None]):
 
     async def on_mount(self) -> None:
         cfg = load_config()
+        self.theme = cfg.get("theme") if cfg.get("theme") in self.available_themes else "ansi-light"
         self.title = cfg.get("terminal_title") or "npm run dev"
 
         if not has_bduss():

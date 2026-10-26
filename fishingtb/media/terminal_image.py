@@ -37,6 +37,8 @@ def is_windows_terminal() -> bool:
 
 def warm_terminal_probe() -> None:
     """Call once before Textual App.run() so Sixel sizing does not block later."""
+    if resolve_image_renderer() != "sixel":
+        return
     try:
         from textual_image._terminal import probe_terminal
 

@@ -28,19 +28,31 @@ async def _cmd_login() -> int:
     async def progress(msg: str) -> None:
         print(msg, flush=True)
 
+    async def show_qr(url: str) -> None:
+        from rich.console import Console
+        from fishingtb.media.images import fetch_image
+        from fishingtb.media.terminal_image import HalfBlockImage
+
+        image = await fetch_image(url)
+        console = Console()
+        console.print(HalfBlockImage.from_pil(image, max_width=console.width, max_height=40))
+        console.print("请用百度 App 扫码并在手机确认。")
+
     try:
-        tokens = await qr_login(progress=progress)
+        tokens = await qr_login(progress=progress, on_qr_ready=show_qr)
     except QRLoginError as e:
         print(f"Login failed: {e}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
         print("Cancelled", file=sys.stderr)
         return 130
+    finally:
+        from fishingtb.media.images import close_image_client
+        await close_image_client()
 
     cfg = load_config()
     cfg["bduss"] = tokens.bduss
-    if tokens.stoken:
-        cfg["stoken"] = tokens.stoken
+    cfg["stoken"] = tokens.stoken
     save_config(cfg)
     print(f"Saved credentials to {CONFIG_PATH}", flush=True)
 
@@ -55,6 +67,8 @@ async def _cmd_login() -> int:
         return 1
     finally:
         await session.close()
+        from fishingtb.media.images import close_image_client
+        await close_image_client()
     return 0
 
 

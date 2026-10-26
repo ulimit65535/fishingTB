@@ -106,7 +106,7 @@ class ThreadDetailScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical():
-            yield Label("", id="detail-header")
+            yield Label("", id="detail-header", markup=False)
             yield VerticalScroll(id="posts-scroll")
             with ToolBar():
                 yield Button("返回", id="btn-back")

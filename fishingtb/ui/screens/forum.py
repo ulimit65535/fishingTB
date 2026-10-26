@@ -46,7 +46,7 @@ class ForumScreen(Screen):
         margin-right: 1;
     }
     #tab-bar Button.-active {
-        color: #4ea1ff;
+        color: $primary;
         text-style: underline;
         background: transparent;
     }
@@ -82,7 +82,7 @@ class ForumScreen(Screen):
         self._loading_forums = False
 
     def compose(self) -> ComposeResult:
-        yield Label("Home", id="home-header")
+        yield Label("Home", id="home-header", markup=False)
         with Horizontal(id="tab-bar"):
             yield Button("关注动态", id="tab-feed")
             yield Button("关注的吧", id="tab-forums")

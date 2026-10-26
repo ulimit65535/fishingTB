@@ -12,6 +12,8 @@ from typing import Callable
 from urllib.parse import unquote
 
 import aiohttp
+from fishingtb.tls import verified_context
+from fishingtb.media.urls import media_url
 
 UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -97,7 +99,7 @@ async def fetch_qr(session: aiohttp.ClientSession, gid: str) -> tuple[str, str]:
         img = "https://" + img
     elif not img.startswith("http"):
         img = "https://passport.baidu.com/v2/api/qrcode?sign=" + data["sign"] + "&lp=pc"
-    return img, data["sign"]
+    return media_url(img), data["sign"]
 
 
 async def poll_scan(
@@ -270,7 +272,8 @@ async def qr_login(
     """
     timeout_total = aiohttp.ClientTimeout(total=30)
     headers = {"User-Agent": UA, "Referer": "https://tieba.baidu.com/"}
-    async with aiohttp.ClientSession(headers=headers, timeout=timeout_total) as session:
+    connector = aiohttp.TCPConnector(ssl=verified_context())
+    async with aiohttp.ClientSession(headers=headers, timeout=timeout_total, connector=connector) as session:
         gid = _gid()
         await _maybe_progress(progress, "正在获取二维码…")
         img_url, sign = await fetch_qr(session, gid)

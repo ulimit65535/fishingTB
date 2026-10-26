@@ -4,17 +4,19 @@ from __future__ import annotations
 
 import asyncio
 
-import aiotieba
 from aiotieba.enums import ThreadSortType
 
 from fishingtb.feeds.forum import get_forum_threads
 from fishingtb.session import TiebaSession
+from fishingtb.transport import VerifiedClient
 
 
 async def main() -> None:
     # Guest client — may work for public forum listing
-    async with aiotieba.Client() as client:
+    async with VerifiedClient() as client:
         threads = await client.get_threads("python", pn=1, rn=5, sort=ThreadSortType.HOT)
+        assert threads.err is None, str(threads.err)
+        assert threads, "Public forum returned no threads"
         print("guest threads", len(threads))
         if threads:
             t = threads[0]

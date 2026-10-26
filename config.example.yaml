@@ -6,6 +6,9 @@ stoken: ""
 
 terminal_title: npm run dev
 
+# ansi-light | ansi-dark: inherit your terminal's default colors and ANSI palette
+theme: ansi-light
+
 recent_forums: []
 
 # auto | sixel | braille | halfblock
